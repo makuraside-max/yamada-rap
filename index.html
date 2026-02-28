@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>🎤 RAP BOARD</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -16,7 +16,7 @@
 
     body {
       background: #0a0a0f;
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'DotGothic16', sans-serif;
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -46,7 +46,7 @@
       justify-content: center;
     }
     #logo {
-      font-family: 'Bebas Neue', cursive;
+      font-family: 'Dela Gothic One', cursive;
       font-size: 1.8rem;
       letter-spacing: 0.12em;
       background: linear-gradient(90deg, #FF3366, #FF9900, #00E5FF);
@@ -67,7 +67,7 @@
       padding: 0 12px;
     }
     .beat-btn {
-      font-family: 'Bebas Neue', cursive;
+      font-family: 'Dela Gothic One', cursive;
       font-size: 1rem;
       letter-spacing: 0.1em;
       padding: 0 28px;
@@ -114,7 +114,7 @@
       width: 100%;
     }
     #big-word {
-      font-family: 'Bebas Neue', cursive;
+      font-family: 'Dela Gothic One', cursive;
       font-size: clamp(2rem, 12vw, 3.5rem);
       letter-spacing: 0.05em;
       line-height: 1;
@@ -215,7 +215,7 @@
       overflow: hidden;
     }
     .word-btn {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: 'DotGothic16', sans-serif;
       font-weight: 700;
       font-size: clamp(0.75rem, 3.5vw, 0.95rem);
       border-radius: 8px;
@@ -331,6 +331,18 @@
       "させて頂きます": "5-9_Saseteitadakimas.wav"
     };
 
+    /* ── 音声プリロード（タイムラグ対策） ── */
+    var audioCache = {};
+    function preloadAudio() {
+      var allFiles = Object.values(wordAudioMap).concat(Object.values(beatAudioMap));
+      allFiles.forEach(function(file) {
+        var a = new Audio(file);
+        a.preload = "auto";
+        audioCache[file] = a;
+      });
+    }
+    preloadAudio();
+
     /* ── 状態 ── */
     var beatAudio      = null;
     var beatPlayingIdx = null;
@@ -363,7 +375,8 @@
     function startBeat(idx, btn) {
       var file = beatAudioMap[idx];
       if (!file) { beatPlayingIdx = idx; btn.classList.add("active"); return; }
-      beatAudio = new Audio(file);
+      beatAudio = audioCache[file] || new Audio(file);
+      beatAudio.currentTime = 0;
       beatAudio.loop = true;
       beatAudio.play().catch(function(e) {
         if (e.name !== "AbortError") {
@@ -374,13 +387,16 @@
       btn.classList.add("active");
     }
 
-    /* ── 単語音声（ビートに重ねて再生） ── */
+    /* ── 単語音声（キャッシュから即再生） ── */
     function playWordAudio(word) {
       var file = wordAudioMap[word];
       if (!file) return;
-      var a = new Audio(file);
+      var a = audioCache[file] || new Audio(file);
+      a.currentTime = 0;
       a.play().catch(function(e) {
-        console.warn("word error:", file, e.message);
+        if (e.name !== "AbortError") {
+          console.warn("word error:", file, e.message);
+        }
       });
     }
 
