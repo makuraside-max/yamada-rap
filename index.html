@@ -2,19 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>🎤 RAP BOARD</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&family=Bebas+Neue&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
     body {
-      min-height: 100vh;
       background: #0a0a0f;
       font-family: 'Noto Sans JP', sans-serif;
       color: #fff;
-      padding-bottom: 48px;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
     body::before {
@@ -29,84 +35,92 @@
       z-index: 0;
     }
 
+    /* ── ヘッダー ── */
     #header {
       position: relative;
       z-index: 1;
-      text-align: center;
-      padding: 28px 16px 12px;
+      height: 48px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #logo {
-      display: block;
       font-family: 'Bebas Neue', cursive;
-      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-size: 1.8rem;
       letter-spacing: 0.12em;
       background: linear-gradient(90deg, #FF3366, #FF9900, #00E5FF);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    #sub {
-      display: block;
-      font-size: 0.75rem;
-      color: #666;
-      letter-spacing: 0.2em;
-      margin-top: 4px;
-    }
 
+    /* ── ビートボタン ── */
     #beat-row {
       position: relative;
       z-index: 1;
+      height: 52px;
+      flex-shrink: 0;
       display: flex;
       gap: 10px;
+      align-items: center;
       justify-content: center;
-      flex-wrap: wrap;
-      padding: 0 12px 20px;
+      padding: 0 12px;
     }
     .beat-btn {
       font-family: 'Bebas Neue', cursive;
-      font-size: clamp(1rem, 4vw, 1.1rem);
+      font-size: 1rem;
       letter-spacing: 0.1em;
-      padding: clamp(12px, 3vw, 14px) clamp(24px, 6vw, 40px);
+      padding: 0 28px;
+      height: 40px;
       border-radius: 6px;
       cursor: pointer;
       border: 2px solid rgba(255,255,255,0.15);
       background: rgba(255,255,255,0.05);
       color: #aaa;
       transition: all 0.2s ease;
-      min-height: 48px;
       touch-action: manipulation;
     }
     .beat-btn.active {
       background: linear-gradient(135deg, #FF3366, #FF9900);
       border-color: #FF9900;
       color: #fff;
-      box-shadow: 0 0 24px #FF990088;
+      box-shadow: 0 0 20px #FF990088;
     }
 
+    /* ── 表示エリア ── */
     #display-area {
       position: relative;
       z-index: 1;
-      margin: 0 12px 20px;
-      min-height: 130px;
+      height: 96px;
+      flex-shrink: 0;
+      margin: 0 10px 6px;
       border: 1.5px solid #333;
       border-radius: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 20px 12px;
+      gap: 6px;
+      padding: 6px 10px;
       background: rgba(255,255,255,0.02);
       transition: border-color 0.3s;
+      overflow: hidden;
+    }
+    #display-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
     }
     #big-word {
       font-family: 'Bebas Neue', cursive;
-      font-size: clamp(2.5rem, 18vw, 6rem);
+      font-size: clamp(2rem, 12vw, 3.5rem);
       letter-spacing: 0.05em;
       line-height: 1;
-      text-shadow: 0 0 40px currentColor;
+      text-shadow: 0 0 30px currentColor;
       display: none;
       text-align: center;
-      word-break: break-all;
     }
     #big-word.pop {
       display: block;
@@ -114,298 +128,330 @@
     }
     #placeholder {
       color: #333;
-      font-size: clamp(0.75rem, 3vw, 0.9rem);
+      font-size: 0.8rem;
       letter-spacing: 0.1em;
-      text-align: center;
-    }
-
-    #lyric-tape {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      max-width: 100%;
-    }
-    .lyric-chip {
-      font-size: clamp(0.7rem, 2.5vw, 0.8rem);
-      border: 1px solid;
-      border-radius: 3px;
-      padding: 3px 8px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
     }
     #clear-btn {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       background: transparent;
-      border: 1px solid #333;
+      border: 1px solid #444;
       color: #555;
       border-radius: 4px;
-      padding: 8px 16px;
+      padding: 5px 10px;
       cursor: pointer;
-      letter-spacing: 0.1em;
-      display: none;
-      min-height: 44px;
       touch-action: manipulation;
+      white-space: nowrap;
+      display: none;
+      flex-shrink: 0;
     }
-    #clear-btn:hover { border-color: #666; color: #999; }
+    #lyric-tape {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 5px;
+      overflow: hidden;
+      max-width: 100%;
+      height: 22px;
+    }
+    .lyric-chip {
+      font-size: 0.65rem;
+      border: 1px solid;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
 
-    #groups-area {
+    /* ── メインエリア ── */
+    #main-area {
       position: relative;
       z-index: 1;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      gap: 8px;
+      padding: 0 10px 10px;
+      overflow: hidden;
+    }
+
+    /* 左：グループ選択 */
+    #group-selector {
+      width: 44px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 0 12px;
-      max-width: 900px;
-      margin: 0 auto;
+      gap: 6px;
     }
-    .group {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.06);
+    .group-tab {
+      flex: 1;
+      min-height: 0;
       border-radius: 8px;
-      padding: 12px;
-    }
-    .group-label {
-      font-family: 'Bebas Neue', cursive;
-      font-size: clamp(0.8rem, 3vw, 0.9rem);
-      letter-spacing: 0.2em;
-      padding-left: 8px;
-      margin-bottom: 10px;
-    }
-    .word-grid {
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: rgba(255,255,255,0.04);
+      transition: all 0.15s ease;
+      touch-action: manipulation;
       display: flex;
-      flex-wrap: wrap;
-      gap: clamp(6px, 2vw, 8px);
+      align-items: center;
+      justify-content: center;
+    }
+    .group-tab.active {
+      background: rgba(255,255,255,0.12);
+    }
+    .group-tab-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* 右：単語グリッド */
+    #word-area {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      overflow: hidden;
     }
     .word-btn {
       font-family: 'Noto Sans JP', sans-serif;
       font-weight: 700;
-      font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-      padding: clamp(10px, 2.5vw, 10px) clamp(12px, 3vw, 16px);
-      border-radius: 6px;
+      font-size: clamp(0.75rem, 3.5vw, 0.95rem);
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.15s ease;
-      letter-spacing: 0.03em;
-      white-space: nowrap;
-      min-height: 44px;
+      border: none;
+      transition: background 0.1s, transform 0.1s;
       touch-action: manipulation;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
     }
-    .word-btn:hover  { transform: scale(1.06); }
-    .word-btn:active { transform: scale(0.95); }
-
-    /* スマホ用追加調整 */
-    @media (max-width: 480px) {
-      #header { padding: 20px 12px 10px; }
-      #beat-row { gap: 8px; padding-bottom: 16px; }
-      .beat-btn { padding: 12px 20px; width: calc(50% - 4px); text-align: center; }
-      #display-area { margin: 0 10px 16px; min-height: 110px; }
-      #groups-area { gap: 10px; padding: 0 10px; }
-      .group { padding: 10px; }
-    }
+    .word-btn:active { transform: scale(0.93); }
 
     @keyframes popIn {
       0%   { transform: scale(0.5) rotate(-5deg); opacity: 0; }
       60%  { transform: scale(1.15) rotate(2deg); opacity: 1; }
       100% { transform: scale(1) rotate(0deg);   opacity: 1; }
     }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
   </style>
 </head>
 <body>
 
-  <div id="header">
-    <span id="logo">🎤 RAP BOARD</span>
-    <span id="sub">ビートを選んで、単語を叩け</span>
-  </div>
+  <div id="header"><span id="logo">🎤 RAP BOARD</span></div>
 
   <div id="beat-row"></div>
 
   <div id="display-area">
-    <div id="placeholder">↓ 単語を押してラップしろ ↓</div>
-    <div id="big-word"></div>
+    <div id="display-top">
+      <div id="placeholder">↓ 単語を押してラップしろ ↓</div>
+      <div id="big-word"></div>
+      <button id="clear-btn" onclick="clearLyric()">クリア</button>
+    </div>
     <div id="lyric-tape"></div>
-    <button id="clear-btn" onclick="clearLyric()">クリア</button>
   </div>
 
-  <div id="groups-area"></div>
+  <div id="main-area">
+    <div id="group-selector"></div>
+    <div id="word-area"></div>
+  </div>
 
   <script>
 
-    /* ============================================
-       データ定義
-    ============================================ */
-
+    /* ── データ ── */
     var beats = ["🔥 TRAP", "💥 BOOM BAP"];
 
     var groups = [
-      { label: "G1 主語", color: "#FF3366",
+      { color: "#FF3366",
         words: ["俺は", "俺の", "こいつは", "俺らは", "おまえ", "先生", "母ちゃん", "犬は", "世界は"] },
-      { label: "G2 形容", color: "#FF9900",
+      { color: "#FF9900",
         words: ["最高の", "最強の", "伝説の", "アホの", "多数の", "光の", "緑の", "街の", "ここの"] },
-      { label: "G3 名詞", color: "#00E5FF",
+      { color: "#00E5FF",
         words: ["ラッパー", "天才", "相棒", "犬", "レジェンド", "にわとり", "番人", "証人", "山田"] },
-      { label: "G4 動詞", color: "#B2FF59",
+      { color: "#B2FF59",
         words: ["今すぐ", "ここで", "バイブス", "踊る", "驚く", "回る", "冷たい", "アホほど"] },
-      { label: "G5 締め", color: "#EA80FC",
+      { color: "#EA80FC",
         words: ["叫ぶぜ！", "決めるぜ！", "イェア！", "踊るぜ！", "のぼるぜ！", "ヘイ！", "きめろ！", "まかせろ！", "させて頂きます"] }
     ];
 
-    /* ============================================
-       ビート音源マッピング
-       ※ index.html と同じフォルダに置いてください
-       ※ 他のビートが用意できたら例のように追加OK
-          例) 1: "beat2.wav"
-    ============================================ */
+    /* ── 音源マッピング（index.html と同じフォルダに配置） ── */
     var beatAudioMap = {
-      0: "beat1.wav",   // 🔥 TRAP
-      1: "beat2.wav"    // 💥 BOOM BAP
+      0: "beat1.wav",
+      1: "beat2.wav"
     };
-
-    /* ============================================
-       単語音声マッピング
-       ※ index.html と同じフォルダに置いてください
-    ============================================ */
     var wordAudioMap = {
-      "俺は":     "1-1_oreha.wav",
-      "最高の":   "2-1_saiko-no.wav",
-      "ラッパー": "3-1_Rappa-.wav",
-      "山田":     "3-9_yamada.wav"
+      "俺は":           "1-1_oreha.wav",
+      "最高の":         "2-1_saiko-no.wav",
+      "ラッパー":       "3-1_Rappa-.wav",
+      "番人":           "3-7_bannin.wav",
+      "証人":           "3-9_Shonin.wav",
+      "山田":           "3-9_yamada.wav",
+      "今すぐ":         "4-1_imasugu.wav",
+      "ここで":         "4-2_kokode.wav",
+      "バイブス":       "4-3_Bybs.wav",
+      "踊る":           "4-4_Odoru.wav",
+      "驚く":           "4-5_Odoroku.wav",
+      "回る":           "4-6_Mawaru.wav",
+      "冷たい":         "4-7_Tsumetai.wav",
+      "アホほど":       "4-8_Ahohodo.wav",
+      "叫ぶぜ！":       "5-1_Sakebuze.wav",
+      "決めるぜ！":     "5-2_Kimeruze.wav",
+      "イェア！":       "5-3_Yeah.wav",
+      "踊るぜ！":       "5-4_Odoruze.wav",
+      "のぼるぜ！":     "5-5_Noboruze.wav",
+      "ヘイ！":         "5-6_Hey.wav",
+      "きめろ！":       "5-7_Kimero.wav",
+      "まかせろ！":     "5-8_makasero.wav",
+      "させて頂きます": "5-9_Saseteitadakimas.wav"
     };
 
-    /* ============================================
-       状態変数（ページ内で1回だけ宣言）
-    ============================================ */
-    var beatAudio      = null;  // ループ中のビート Audio
-    var beatPlayingIdx = null;  // 再生中ビートの番号
-    var lyricHistory   = [];    // ライムテープ履歴
+    /* ── 状態 ── */
+    var beatAudio      = null;
+    var beatPlayingIdx = null;
+    var lyricHistory   = [];
+    var activeGroupIdx = 0;
 
-    /* ============================================
-       ビート 停止 / 再生
-    ============================================ */
+    /* ── 音声コンテキスト解除（iOSなどの自動再生ブロック対策） ── */
+    var audioUnlocked = false;
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      var dummy = new Audio();
+      dummy.play().catch(function() {});
+      audioUnlocked = true;
+    }
+    document.addEventListener("touchstart", unlockAudio, { once: true });
+    document.addEventListener("click", unlockAudio, { once: true });
+
+    /* ── ビート操作 ── */
+    var beatPlayPromise = null;  // play()のPromiseを保持
+
     function stopBeat() {
       if (beatAudio) {
-        beatAudio.pause();
-        beatAudio.currentTime = 0;
+        var audioToStop = beatAudio;
+        // play()のPromiseが解決してからpause()する
+        if (beatPlayPromise) {
+          beatPlayPromise.then(function() {
+            audioToStop.pause();
+            audioToStop.currentTime = 0;
+          }).catch(function() {});
+        } else {
+          audioToStop.pause();
+          audioToStop.currentTime = 0;
+        }
         beatAudio = null;
+        beatPlayPromise = null;
       }
       beatPlayingIdx = null;
-      document.querySelectorAll(".beat-btn").forEach(function(b) {
-        b.classList.remove("active");
-      });
+      document.querySelectorAll(".beat-btn").forEach(function(b) { b.classList.remove("active"); });
     }
 
-    function startBeat(index, btn) {
-      var file = beatAudioMap[index];
-      if (file) {
-        beatAudio = new Audio(file);
-        beatAudio.loop = true;  // ループ再生
-        beatAudio.play().catch(function(e) {
-          console.warn("ビート再生エラー:", e);
+    function startBeat(idx, btn) {
+      var file = beatAudioMap[idx];
+      if (!file) { beatPlayingIdx = idx; btn.classList.add("active"); return; }
+      beatAudio = new Audio(file);
+      beatAudio.loop = true;
+      beatPlayPromise = beatAudio.play();
+      if (beatPlayPromise) {
+        beatPlayPromise.catch(function(e) {
+          // AbortError は pause()との競合による無害なエラーなので無視
+          if (e.name !== "AbortError") {
+            console.warn("beat error:", file, e.message);
+          }
         });
       }
-      beatPlayingIdx = index;
+      beatPlayingIdx = idx;
       btn.classList.add("active");
     }
 
-    /* ============================================
-       単語音声 再生（ビートに重ねて鳴らす）
-    ============================================ */
+    /* ── 単語音声（ビートに重ねて再生） ── */
     function playWordAudio(word) {
       var file = wordAudioMap[word];
-      if (file) {
-        // new Audio() で毎回新しいオブジェクトを生成するので
-        // ビートと別チャンネルで重なって再生される
-        var audio = new Audio(file);
-        audio.play().catch(function(e) {
-          console.warn("単語音声エラー:", e);
-        });
-      }
+      if (!file) return;
+      var a = new Audio(file);
+      a.play().catch(function(e) {
+        console.warn("word error:", file, e.message);
+      });
     }
 
-    /* ============================================
-       ビートボタンの生成
-    ============================================ */
-    var beatRow = document.getElementById("beat-row");
+    /* ── ビートボタン生成 ── */
     beats.forEach(function(label, i) {
       var btn = document.createElement("button");
       btn.className = "beat-btn";
       btn.textContent = label;
       btn.addEventListener("click", function() {
-        if (beatPlayingIdx === i) {
-          stopBeat();          // 同じボタン → 停止
-        } else {
-          stopBeat();          // 他のビートを止めてから
-          startBeat(i, btn);   // 新しいビートを再生
-        }
+        if (beatPlayingIdx === i) { stopBeat(); } else { stopBeat(); startBeat(i, btn); }
       });
-      beatRow.appendChild(btn);
+      document.getElementById("beat-row").appendChild(btn);
     });
 
-    /* ============================================
-       単語グループの生成
-    ============================================ */
-    var groupsArea = document.getElementById("groups-area");
-    groups.forEach(function(g) {
-      var groupDiv = document.createElement("div");
-      groupDiv.className = "group";
+    /* ── グループタブ生成 ── */
+    groups.forEach(function(g, i) {
+      var tab = document.createElement("button");
+      tab.className = "group-tab" + (i === 0 ? " active" : "");
+      tab.style.borderColor = i === 0 ? g.color : "transparent";
 
-      var wordGrid = document.createElement("div");
-      wordGrid.className = "word-grid";
+      var dot = document.createElement("div");
+      dot.className = "group-tab-dot";
+      dot.style.background = g.color;
+      tab.appendChild(dot);
+
+      tab.addEventListener("click", function() {
+        activeGroupIdx = i;
+        document.querySelectorAll(".group-tab").forEach(function(t, j) {
+          t.classList.toggle("active", j === i);
+          t.style.borderColor = j === i ? groups[j].color : "transparent";
+        });
+        renderWordArea();
+      });
+
+      document.getElementById("group-selector").appendChild(tab);
+    });
+
+    /* ── 単語エリア描画 ── */
+    function renderWordArea() {
+      var wordArea = document.getElementById("word-area");
+      wordArea.innerHTML = "";
+      var g = groups[activeGroupIdx];
+      var rows = Math.ceil(g.words.length / 2);
+      wordArea.style.gridTemplateRows = "repeat(" + rows + ", 1fr)";
 
       g.words.forEach(function(word) {
         var btn = document.createElement("button");
         btn.className = "word-btn";
         btn.textContent = word;
         btn.style.color = g.color;
+        btn.style.background = g.color + "18";
         btn.style.border = "1.5px solid " + g.color + "55";
-        btn.style.background = g.color + "11";
-
-        btn.addEventListener("mouseenter", function() {
-          btn.style.background = g.color + "33";
-          btn.style.boxShadow = "0 0 16px " + g.color + "66";
-        });
-        btn.addEventListener("mouseleave", function() {
-          btn.style.background = g.color + "11";
-          btn.style.boxShadow = "none";
-        });
-        btn.addEventListener("click", function() {
-          handleWord(word, g.color);
-        });
-
-        wordGrid.appendChild(btn);
+        btn.addEventListener("click", function() { handleWord(word, g.color); });
+        wordArea.appendChild(btn);
       });
+    }
 
-      groupDiv.appendChild(wordGrid);
-      groupsArea.appendChild(groupDiv);
-    });
-
-    /* ============================================
-       単語ボタン押下処理
-    ============================================ */
+    /* ── 単語押下 ── */
     function handleWord(word, color) {
       playWordAudio(word);
-
       document.getElementById("display-area").style.borderColor = color + "88";
       document.getElementById("placeholder").style.display = "none";
 
-      var bigWord = document.getElementById("big-word");
-      bigWord.style.color = color;
-      bigWord.style.display = "";  // インラインstyleをリセットしてCSSに戻す
-      bigWord.textContent = word;
-      bigWord.classList.remove("pop");
-      void bigWord.offsetWidth; // アニメーションリセット用
-      bigWord.classList.add("pop");
+      var bw = document.getElementById("big-word");
+      bw.style.color = color;
+      bw.style.display = "";
+      bw.textContent = word;
+      bw.classList.remove("pop");
+      void bw.offsetWidth;
+      bw.classList.add("pop");
 
       lyricHistory.push({ word: word, color: color });
-      if (lyricHistory.length > 7) lyricHistory.shift();
+      if (lyricHistory.length > 8) lyricHistory.shift();
       renderLyricTape();
     }
 
-    /* ============================================
-       ライムテープ描画
-    ============================================ */
+    /* ── ライムテープ ── */
     function renderLyricTape() {
       var tape = document.getElementById("lyric-tape");
       tape.innerHTML = "";
@@ -421,18 +467,20 @@
         lyricHistory.length > 0 ? "block" : "none";
     }
 
-    /* ============================================
-       クリアボタン
-    ============================================ */
+    /* ── クリア ── */
     function clearLyric() {
       lyricHistory = [];
       renderLyricTape();
-      var bigWord = document.getElementById("big-word");
-      bigWord.classList.remove("pop");
-      bigWord.style.display = "none";
+      var bw = document.getElementById("big-word");
+      bw.classList.remove("pop");
+      bw.style.display = "none";
       document.getElementById("placeholder").style.display = "block";
       document.getElementById("display-area").style.borderColor = "#333";
+      document.getElementById("clear-btn").style.display = "none";
     }
+
+    /* ── 初期描画 ── */
+    renderWordArea();
 
   </script>
 </body>
