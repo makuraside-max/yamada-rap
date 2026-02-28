@@ -308,6 +308,7 @@
       "きめろ！":       "5-7_Kimero.wav",
       "まかせろ！":     "5-8_makasero.wav",
       "させて頂きます": "5-9_Saseteitadakimas.wav"
+      // G1・G2の残りはwavアップロード後に追加
     };
 
     /* ── 状態 ── */
@@ -328,23 +329,12 @@
     document.addEventListener("click", unlockAudio, { once: true });
 
     /* ── ビート操作 ── */
-    var beatPlayPromise = null;  // play()のPromiseを保持
-
     function stopBeat() {
       if (beatAudio) {
-        var audioToStop = beatAudio;
-        // play()のPromiseが解決してからpause()する
-        if (beatPlayPromise) {
-          beatPlayPromise.then(function() {
-            audioToStop.pause();
-            audioToStop.currentTime = 0;
-          }).catch(function() {});
-        } else {
-          audioToStop.pause();
-          audioToStop.currentTime = 0;
-        }
+        beatAudio.loop = false;      // ループを止めてから
+        beatAudio.pause();
+        beatAudio.currentTime = 0;
         beatAudio = null;
-        beatPlayPromise = null;
       }
       beatPlayingIdx = null;
       document.querySelectorAll(".beat-btn").forEach(function(b) { b.classList.remove("active"); });
@@ -355,15 +345,11 @@
       if (!file) { beatPlayingIdx = idx; btn.classList.add("active"); return; }
       beatAudio = new Audio(file);
       beatAudio.loop = true;
-      beatPlayPromise = beatAudio.play();
-      if (beatPlayPromise) {
-        beatPlayPromise.catch(function(e) {
-          // AbortError は pause()との競合による無害なエラーなので無視
-          if (e.name !== "AbortError") {
-            console.warn("beat error:", file, e.message);
-          }
-        });
-      }
+      beatAudio.play().catch(function(e) {
+        if (e.name !== "AbortError") {
+          console.warn("beat error:", file, e.message);
+        }
+      });
       beatPlayingIdx = idx;
       btn.classList.add("active");
     }
