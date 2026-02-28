@@ -1,0 +1,11 @@
+"俺は"   → 1-1_oreha.wav
+  "最高の" → 2-1_saiko-no.wav
+  "ラッパー" → 3-1_Rappa-.wav
+  "山田"   → 3-9_yamada.wav
+
+rap-board/
+├── index.html          ← このファイル
+├── 1-1_oreha.wav
+├── 2-1_saiko-no.wav
+├── 3-1_Rappa-.wav
+└── 3-9_yamada.wav
