@@ -355,45 +355,52 @@
 
     /* ── Web Audio API（超低遅延） ── */
     var actx = null;
-    var decodedBuffers = {};   // ファイル名 → AudioBuffer
-    var beatSourceNode = null; // ループ中のビートノード
+    var fetchedArrayBuffers = {};  // ページ読み込み時点でfetch済みのraw data
+    var decodedBuffers = {};       // デコード済みAudioBuffer
+    var beatSourceNode = null;
 
     /* ── 状態 ── */
     var beatPlayingIdx = null;
     var lyricHistory   = [];
     var activeGroupIdx = 0;
 
-    // AudioContext 初期化（初回タップで起動）
+    // AudioContext 初期化
     function getAudioContext() {
       if (!actx) {
         actx = new (window.AudioContext || window.webkitAudioContext)();
       }
-      if (actx.state === "suspended") {
-        actx.resume();
-      }
+      if (actx.state === "suspended") { actx.resume(); }
       return actx;
     }
 
-    // ファイルをfetchしてデコード→バッファに保存
-    function loadBuffer(file) {
-      return fetch(file)
-        .then(function(res) { return res.arrayBuffer(); })
-        .then(function(ab) { return getAudioContext().decodeAudioData(ab); })
-        .then(function(buf) {
-          decodedBuffers[file] = buf;
-        })
-        .catch(function(e) { console.warn("load error:", file, e); });
-    }
-
-    // 起動時に全ファイルをプリロード
-    function preloadAll() {
+    // 【ステップ1】ページ読み込み直後にfetchだけ先に済ませる（ユーザー操作不要）
+    function prefetchAll() {
       var files = Object.values(wordAudioMap).concat(Object.values(beatAudioMap));
-      // 重複除去
       var unique = files.filter(function(f, i) { return files.indexOf(f) === i; });
-      unique.forEach(function(f) { loadBuffer(f); });
+      unique.forEach(function(file) {
+        fetch(file)
+          .then(function(res) { return res.arrayBuffer(); })
+          .then(function(ab) { fetchedArrayBuffers[file] = ab; })
+          .catch(function(e) { console.warn("fetch error:", file, e); });
+      });
     }
 
-    // バッファを即時再生（ゼロレイテンシ）
+    // 【ステップ2】初回タップ時にAudioContextを作りデコードする
+    function decodeAll() {
+      var ctx = getAudioContext();
+      Object.keys(fetchedArrayBuffers).forEach(function(file) {
+        if (decodedBuffers[file]) return; // 既にデコード済みならスキップ
+        // decodeAudioData はArrayBufferを消費するのでsliceしてコピーを渡す
+        var ab = fetchedArrayBuffers[file];
+        ctx.decodeAudioData(ab.slice(0), function(buf) {
+          decodedBuffers[file] = buf;
+        }, function(e) {
+          console.warn("decode error:", file, e);
+        });
+      });
+    }
+
+    // バッファを即時再生
     function playBuffer(file, loop) {
       var ctx = getAudioContext();
       var buf = decodedBuffers[file];
@@ -431,15 +438,15 @@
       playBuffer(file, false);
     }
 
-    // 初回操作でAudioContext起動＋プリロード開始
-    document.addEventListener("touchstart", function() {
-      getAudioContext();
-      preloadAll();
-    }, { once: true });
-    document.addEventListener("click", function() {
-      getAudioContext();
-      preloadAll();
-    }, { once: true });
+    // ページ読み込み直後にfetch開始（AudioContext不要なので即実行できる）
+    prefetchAll();
+
+    // 初回タップ時にAudioContextを起動してデコード
+    function onFirstInteraction() {
+      decodeAll();
+    }
+    document.addEventListener("touchstart", onFirstInteraction, { once: true });
+    document.addEventListener("click", onFirstInteraction, { once: true });
 
     /* ── ビートボタン生成 ── */
     beats.forEach(function(label, i) {
