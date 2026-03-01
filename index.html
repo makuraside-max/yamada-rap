@@ -80,7 +80,7 @@
     }
     .beat-btn {
       font-family: 'Bebas Neue', cursive;
-      font-size: 1rem;
+      font-size: 1.1rem;
       letter-spacing: 0.1em;
       padding: 0 28px;
       height: 40px;
@@ -235,7 +235,7 @@
     .word-btn {
       font-family: 'Noto Sans JP', sans-serif;
       font-weight: 700;
-      font-size: clamp(0.75rem, 3.5vw, 0.95rem);
+      font-size: clamp(0.9rem, 4vw, 1.05rem);
       border-radius: 8px;
       cursor: pointer;
       border: none;
@@ -250,7 +250,7 @@
       justify-content: center;
       min-height: 0;
     }
-    .word-btn:active { transform: scale(0.93); }
+    .word-btn:active { transform: scale(0.95); }
 
     @keyframes popIn {
       0%   { transform: scale(0.5) rotate(-5deg); opacity: 0; }
@@ -353,42 +353,64 @@
       "させて頂きます": "5-9_Saseteitadakimas.wav"
     };
 
-    /* ── 音声プリロード（タイムラグ対策） ── */
-    var audioCache = {};
-    function preloadAudio() {
-      var allFiles = Object.values(wordAudioMap).concat(Object.values(beatAudioMap));
-      allFiles.forEach(function(file) {
-        var a = new Audio(file);
-        a.preload = "auto";
-        audioCache[file] = a;
-      });
-    }
-    preloadAudio();
+    /* ── Web Audio API（超低遅延） ── */
+    var actx = null;
+    var decodedBuffers = {};   // ファイル名 → AudioBuffer
+    var beatSourceNode = null; // ループ中のビートノード
 
     /* ── 状態 ── */
-    var beatAudio      = null;
     var beatPlayingIdx = null;
     var lyricHistory   = [];
     var activeGroupIdx = 0;
 
-    /* ── 音声コンテキスト解除（iOSなどの自動再生ブロック対策） ── */
-    var audioUnlocked = false;
-    function unlockAudio() {
-      if (audioUnlocked) return;
-      var dummy = new Audio();
-      dummy.play().catch(function() {});
-      audioUnlocked = true;
+    // AudioContext 初期化（初回タップで起動）
+    function getAudioContext() {
+      if (!actx) {
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (actx.state === "suspended") {
+        actx.resume();
+      }
+      return actx;
     }
-    document.addEventListener("touchstart", unlockAudio, { once: true });
-    document.addEventListener("click", unlockAudio, { once: true });
+
+    // ファイルをfetchしてデコード→バッファに保存
+    function loadBuffer(file) {
+      return fetch(file)
+        .then(function(res) { return res.arrayBuffer(); })
+        .then(function(ab) { return getAudioContext().decodeAudioData(ab); })
+        .then(function(buf) {
+          decodedBuffers[file] = buf;
+        })
+        .catch(function(e) { console.warn("load error:", file, e); });
+    }
+
+    // 起動時に全ファイルをプリロード
+    function preloadAll() {
+      var files = Object.values(wordAudioMap).concat(Object.values(beatAudioMap));
+      // 重複除去
+      var unique = files.filter(function(f, i) { return files.indexOf(f) === i; });
+      unique.forEach(function(f) { loadBuffer(f); });
+    }
+
+    // バッファを即時再生（ゼロレイテンシ）
+    function playBuffer(file, loop) {
+      var ctx = getAudioContext();
+      var buf = decodedBuffers[file];
+      if (!buf) return null;
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = !!loop;
+      src.connect(ctx.destination);
+      src.start(0);
+      return src;
+    }
 
     /* ── ビート操作 ── */
     function stopBeat() {
-      if (beatAudio) {
-        beatAudio.loop = false;      // ループを止めてから
-        beatAudio.pause();
-        beatAudio.currentTime = 0;
-        beatAudio = null;
+      if (beatSourceNode) {
+        try { beatSourceNode.stop(); } catch(e) {}
+        beatSourceNode = null;
       }
       beatPlayingIdx = null;
       document.querySelectorAll(".beat-btn").forEach(function(b) { b.classList.remove("active"); });
@@ -397,30 +419,27 @@
     function startBeat(idx, btn) {
       var file = beatAudioMap[idx];
       if (!file) { beatPlayingIdx = idx; btn.classList.add("active"); return; }
-      beatAudio = audioCache[file] || new Audio(file);
-      beatAudio.currentTime = 0;
-      beatAudio.loop = true;
-      beatAudio.play().catch(function(e) {
-        if (e.name !== "AbortError") {
-          console.warn("beat error:", file, e.message);
-        }
-      });
+      beatSourceNode = playBuffer(file, true);
       beatPlayingIdx = idx;
       btn.classList.add("active");
     }
 
-    /* ── 単語音声（キャッシュから即再生） ── */
+    /* ── 単語音声（デコード済みバッファから即撃ち） ── */
     function playWordAudio(word) {
       var file = wordAudioMap[word];
       if (!file) return;
-      var a = audioCache[file] || new Audio(file);
-      a.currentTime = 0;
-      a.play().catch(function(e) {
-        if (e.name !== "AbortError") {
-          console.warn("word error:", file, e.message);
-        }
-      });
+      playBuffer(file, false);
     }
+
+    // 初回操作でAudioContext起動＋プリロード開始
+    document.addEventListener("touchstart", function() {
+      getAudioContext();
+      preloadAll();
+    }, { once: true });
+    document.addEventListener("click", function() {
+      getAudioContext();
+      preloadAll();
+    }, { once: true });
 
     /* ── ビートボタン生成 ── */
     beats.forEach(function(label, i) {
